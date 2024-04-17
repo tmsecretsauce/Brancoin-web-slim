@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=dev
+      - POSTGRES_DB=brancoin
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  bot:
+    build: ./bot/
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=dev
+      - POSTGRES_DB=brancoin
+      - DISCORD_TOKEN=token_here
+    depends_on:
+      - db
+    volumes:
+      - ./bot/:/usr/src/app
+    
