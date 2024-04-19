@@ -7,3 +7,4 @@ class Env():
     db_name = os.environ['POSTGRES_DB']
     db_conn_str = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}"
     discord_token = os.environ['DISCORD_TOKEN']
+    league_token = os.environ['LEAGUE_TOKEN']

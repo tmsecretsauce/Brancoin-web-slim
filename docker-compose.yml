@@ -16,12 +16,13 @@ services:
 
   bot:
     build: ./bot/
+    env_file:
+      - ./env.txt
     environment:
       - POSTGRES_HOST=db
       - POSTGRES_PASSWORD=password
       - POSTGRES_USER=dev
       - POSTGRES_DB=brancoin
-      - DISCORD_TOKEN=token_here
     depends_on:
       - db
     volumes:

@@ -1,22 +1,36 @@
 import discord
 from discord.ext import commands
-from sqlalchemy import create_engine
-from models import Base
+from sqlalchemy import create_engine, select
+import discord.bot_client
+import discord.bot_league_monitor
+from models.dbcontainer import DbContainer, DbService
+from models.models import LeagueUser
+from league.leagueservice import LeagueService
 from envvars import Env
+from dependency_injector.wiring import Provide, inject
+from league.leaguecontainer import LeagueContainer
 
-engine = create_engine(Env.db_conn_str, echo=True)
 
 
-intents = discord.Intents.default()
-intents.messages = True
-bot = commands.Bot(command_prefix='b ', intents=intents)
+@inject
+def main(dbservice: DbService = Provide[DbContainer.service], league_service: LeagueService = Provide[LeagueContainer.service]):
+    with dbservice.Session() as session:
+        statement = select(LeagueUser)
+        john = session.scalars(statement).first()
 
-@bot.command()
-async def ping(ctx):
-    await ctx.send('pong')
 
-print("lol")
-print(Env.db_conn_str)
-print(Base.metadata.sorted_tables)
 
-bot.run(Env.discord_token)
+
+container = LeagueContainer()
+container.init_resources()
+container.wire(modules=[__name__])
+
+
+container2 = DbContainer()
+container2.init_resources()
+container2.wire(modules=[__name__])
+
+# main()
+
+# discord.bot_client.run_bot()
+monitor = discord.bot_league_monitor.run()
