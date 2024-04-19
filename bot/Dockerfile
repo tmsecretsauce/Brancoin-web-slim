@@ -1,14 +1,17 @@
-FROM python:3.11-alpine
-RUN apk update \
-    apk add \
-    build-base \
-    postgresql \
-    postgresql-dev \
-    libpq \
-    python3-dev \
-    gcc \
-    libc-dev \
-    libffi-dev
+FROM python:3.11-slim
+RUN apt-get update \
+    && apt-get -y install libpq-dev gcc \
+    && pip install psycopg2
+# RUN apk update \
+#     apk add \
+#     build-base \
+#     postgresql \
+#     postgresql-dev \
+#     libpq \
+#     python3-dev \
+#     gcc \
+#     libc-dev \
+#     libffi-dev
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 COPY ./requirements.txt .
