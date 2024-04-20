@@ -14,7 +14,7 @@ RUN apt-get update \
 #     libffi-dev
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
-COPY ./requirements.txt .
+COPY . .
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 ENV PYTHONUNBUFFERED 1

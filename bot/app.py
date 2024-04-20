@@ -30,6 +30,7 @@ container2 = DbContainer()
 container2.init_resources()
 container2.wire(modules=[__name__])
 
+
 # main()
 
 # discord.bot_client.run_bot()

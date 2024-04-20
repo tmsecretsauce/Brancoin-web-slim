@@ -23,8 +23,9 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_USER=dev
       - POSTGRES_DB=brancoin
+      - IS_DEBUG=true
     depends_on:
       - db
-    volumes:
-      - ./bot/:/usr/src/app
+    # volumes:
+    #   - ./bot/:/usr/src/app
     

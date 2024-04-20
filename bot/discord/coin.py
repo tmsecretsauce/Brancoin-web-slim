@@ -8,8 +8,10 @@ from discord.basecommand import BaseCommand
 
 
 class Coin(BaseCommand):
-    async def process(self, message: Message, dbservice: DbService):
-        if not message.content.startswith("bran coin"):
+    prefix = "bran coin"
+    usage = prefix
+    async def process(self, ctx, message: Message, dbservice: DbService):
+        if not message.content.startswith(self.prefix):
             return
         
         with dbservice.Session() as session: 

@@ -10,8 +10,7 @@ from discord.basecommand import BaseCommand
 
 class Discover(BaseCommand):
     chance_of_free_coin = 1 / 5
-    custom_emoji = "<:brancoin:1230681818068418580>"
-    async def process(self, message: Message, dbservice: DbService):
+    async def process(self, ctx, message: Message, dbservice: DbService):
         if random.uniform(0, 1) < self.chance_of_free_coin:
             with dbservice.Session() as session: 
                 guy = session.query(User).filter(User.user_id == str(message.author.id), User.guild_id == str(message.guild.id)).first()
