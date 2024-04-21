@@ -1,6 +1,7 @@
+import datetime
 from typing import List
 from typing import Optional
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, Integer, PrimaryKeyConstraint, UniqueConstraint, true
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Integer, PrimaryKeyConstraint, UniqueConstraint, null, true
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -26,8 +27,8 @@ class User(Base):
 class LeagueUser(Base):
     __tablename__ = "league_user"
     id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
-    summoner_name: Mapped[str] = mapped_column(primary_key=true)
-    region: Mapped[str] = mapped_column(primary_key=true)
+    summoner_name: Mapped[str]
+    tag: Mapped[str]
     trackable: Mapped[bool]
     voteable: Mapped[bool]
     
@@ -35,12 +36,37 @@ class LeagueUser(Base):
     discord_user: Mapped["User"] = relationship(back_populates="league_user")
 
     def __repr__(self) -> str:
-        return f"region(id={self.region!r}, summoner_name={self.summoner_name!r}, trackable={self.trackable!r}, voteable={self.voteable!r})"
+        return f"tag(id={self.tag!r}, summoner_name={self.summoner_name!r}, trackable={self.trackable!r}, voteable={self.voteable!r})"
     
 class Match(Base):
     __tablename__ = "match"
     match_id: Mapped[str] = mapped_column(primary_key=true)
-    processed: Mapped[bool] = mapped_column(server_default="False")
+    finished: Mapped[bool] = mapped_column(server_default="False")
+    start_time: Mapped[datetime.datetime] 
+
+    match_players: Mapped[List["MatchPlayer"]] = relationship(back_populates="match")
+
+class MatchPlayer(Base):
+    __tablename__ = "match_player"
+    match_id: Mapped[str] = mapped_column(ForeignKey("match.match_id"), primary_key=True)
+    league_user_id: Mapped[Integer] = mapped_column(ForeignKey("league_user.id"), primary_key=True)
+    champion: Mapped[str]
+
+    league_user: Mapped["LeagueUser"] = relationship()
+    match: Mapped["Match"] = relationship()
+
+    __table_args__ = (
+        PrimaryKeyConstraint('match_id', 'league_user_id'),
+    )
+
+
+class Jackpot(Base):
+    __tablename__ = "jackpot"
+    guild_id: Mapped[str] = mapped_column(primary_key=True, unique=True)
+    brancoins = mapped_column(Integer, server_default="10")
+
+    def __repr__(self) -> str:
+        return f"Jackpot(guild_id={self.guild_id!r}, brancoins={self.brancoins!r})"
 
 class Votes(Base):
     __tablename__ = "votes"

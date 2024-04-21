@@ -38,6 +38,7 @@ class Gift(BaseCommand):
 
             if source.brancoins < num:
                 await message.reply("You ain't got the facilities for that big man")
+                return
 
             if not is_freebie:
                 source.brancoins -= num

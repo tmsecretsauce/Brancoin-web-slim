@@ -21,7 +21,7 @@ class Coin(BaseCommand):
                 embedVar.set_author(name=message.author.nick, icon_url=message.author.display_avatar.url)
                 embedVar.add_field(name="Total Brancoins", value=str(guy.brancoins), inline=False)
                 if guy.league_user:
-                    embedVar.add_field(name="LoL region", value=guy.league_user.region, inline=False)
+                    embedVar.add_field(name="LoL tag", value=guy.league_user.tag, inline=False)
                     embedVar.add_field(name="LoL username", value=guy.league_user.summoner_name, inline=False)
                     membership_text = ""
                     if guy.league_user.trackable:
