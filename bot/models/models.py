@@ -45,6 +45,7 @@ class Match(Base):
     start_time: Mapped[datetime.datetime] 
 
     match_players: Mapped[List["MatchPlayer"]] = relationship(back_populates="match")
+    votes: Mapped[List["Votes"]] = relationship()
 
     
     def __repr__(self) -> str:
@@ -79,9 +80,14 @@ class Guild(Base):
 class Votes(Base):
     __tablename__ = "votes"
     id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
-    voter: Mapped[str] = mapped_column(ForeignKey("user_account.id"))
+    voter_id: Mapped[str] = mapped_column(ForeignKey("user_account.id"))
+    match_id: Mapped[str] = mapped_column(ForeignKey("match.match_id"))
     target_league_player: Mapped[str] = mapped_column(ForeignKey("league_user.id"), nullable=True)
+    processed: Mapped[bool] = mapped_column(server_default="False")
     type_of_vote: Mapped[int]
+    brancoins: Mapped[int]
+
+    voter: Mapped["User"] = relationship()
 
     def __repr__(self) -> str:
         return f"Votes(id={self.id!r}, voter={self.voter!r}, target_league_player={self.target_league_player!r}, type_of_vote={self.type_of_vote})"

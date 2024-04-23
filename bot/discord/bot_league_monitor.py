@@ -9,7 +9,9 @@ import discord
 import asyncio
 import discord.ext
 import discord.ext.commands
-from requests import session
+import sqlalchemy
+from discord.VoteType import VoteType
+from discord.vote import AddVote
 from discord.addbroadcast import AdminAddBroadcast
 from discord.repeattimer import RepeatTimer
 from discord.addleague import AdminAddLeague
@@ -32,7 +34,7 @@ import traceback
 
 @inject
 class DiscordMonitorClient(commands.Bot):
-    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast()]
+    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote()]
     def __init__(self, intents, dbservice: DbService = Provide[DbContainer.service], league_service: LeagueService = Provide[LeagueContainer.service]):
         super().__init__(intents=intents, command_prefix="b ")
         self.db = dbservice
@@ -66,7 +68,7 @@ class DiscordMonitorClient(commands.Bot):
         for guild in self.guilds:
             self.create_guild(guild)
             self.populate_users(guild)
-        open_game_timer = RepeatTimer(130, self.look_for_open_games)
+        open_game_timer = RepeatTimer(30, self.look_for_open_games)
         open_game_timer.start()
         
         closed_game_timer = RepeatTimer(60, self.handle_finished_games)
@@ -105,13 +107,57 @@ class DiscordMonitorClient(commands.Bot):
             open_matches = session.query(Match).filter(Match.finished == False).all()
             for open_match in open_matches:
                 print("checking if match closed yet")
-                if self.league.get_game(open_match) is not None:
+                results = self.league.get_game(open_match)
+                if results is not None:
                     print("match closed!")
+                    self.process_votes(session, open_match, results)
                     open_match.finished = True
                     session.add(open_match)
                     session.commit()
+                    
+                    # we're in a side thread, to output to discord we need to post to the asyncio looper
+                    asyncio.run_coroutine_threadsafe(self.output_votes_results(open_match.match_id, results), self.loop)
                 else:
                     print("match is not closed")
+
+    def process_votes(self, session, match: Match, results):
+        for vote in match.votes:
+            if vote.type_of_vote == VoteType.WIN.value or vote.type_of_vote == VoteType.LOSE.value:
+                we_win = results['extra_data']['our_team_won']
+                if vote.type_of_vote == VoteType.WIN.value and we_win:
+                    vote.voter.brancoins += vote.brancoins * 2
+                elif vote.type_of_vote == VoteType.LOSE.value and we_win == False:
+                    vote.voter.brancoins += vote.brancoins * 2
+                vote.processed = True
+                session.add(vote)
+
+    async def output_votes_results(self, match_id: str, results):
+        try:
+            with self.db.Session() as session:
+                output = ""
+                match = session.query(Match).filter(Match.match_id == match_id).first()
+                for vote in match.votes:
+                    print("going thru a vote")
+                    print(vote)
+                    guy = await self.fetch_user(vote.voter.user_id)
+                    if vote.type_of_vote == VoteType.WIN.value or vote.type_of_vote == VoteType.LOSE.value:
+                        we_win = results['extra_data']['our_team_won']
+                        if vote.type_of_vote == VoteType.WIN.value and we_win:
+                            print("a")
+                            output += f"{guy.display_name } won {vote.brancoins} because the squad won their game! ::tada: :tada: :tada: "
+                        elif vote.type_of_vote == VoteType.LOSE.value and we_win == False:
+                            print("b")
+                            output += f"{guy.display_name } won {vote.brancoins} because the squad won their game! :tada: :tada: :tada: "
+                        else:
+                            print("c")
+                            output += f"{guy.display_name } lost {vote.brancoins} ... don't know why you put your faith in clowns... :flushed_clown:  :flushed_clown:  :flushed_clown: "
+                print("yeet")
+                print(output)
+                await self.broadcast_all_str(session, output)
+        except Exception as e: 
+            print(e)
+            print(traceback.format_exc())
+                
 
     def look_for_open_games(self):
         print("tick")
@@ -119,6 +165,7 @@ class DiscordMonitorClient(commands.Bot):
             with self.db.Session() as session:
                 trackable_users = session.query(LeagueUser).filter(LeagueUser.trackable == True).all()
                 valid_games = self.league.get_valid_games(trackable_users, trackable_users)
+                fresh_game_added = False
                 for valid_game in valid_games:
                     print("valid game found")
                     match = Match()
@@ -131,14 +178,16 @@ class DiscordMonitorClient(commands.Bot):
                         match_player.champion = self.league.champ_id_to_name(participant['participant_json']['championId'])
                         match.match_players.append(match_player)
                     if session.query(Match).filter(Match.match_id == str(match.match_id)).count() == 0:
+                        fresh_game_added = True
                         session.add(match)
                         print("adding valid game")
                     else:
                         print("game was already tracked")
                 session.commit()
 
-                # we're in a side thread, to output to discord we need to post to the asyncio looper
-                asyncio.run_coroutine_threadsafe(self.broadcast_open_matches(), self.loop)
+                if fresh_game_added:
+                    # we're in a side thread, to output to discord we need to post to the asyncio looper
+                    asyncio.run_coroutine_threadsafe(self.broadcast_open_matches(), self.loop)
 
         except Exception as e: 
             print(e)
@@ -160,6 +209,12 @@ class DiscordMonitorClient(commands.Bot):
         for guild in guilds:
             broadcast_channel = await self.fetch_channel(guild.broadcast_channel_id)
             await broadcast_channel.send(embed=embed)
+
+    async def broadcast_all_str(self, session, msg):
+        guilds = session.query(Guild).filter(Guild.broadcast_channel_id != None).all()
+        for guild in guilds:
+            broadcast_channel = await self.fetch_channel(guild.broadcast_channel_id)
+            await broadcast_channel.send(msg)
 
     # def wrap(func):
     #     @wraps(func)

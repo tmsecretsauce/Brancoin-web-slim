@@ -34,6 +34,7 @@ class ViewMatches(BaseCommand):
         embedVar.add_field(name="Players:", value="--------", inline=False)
         for match_player in match.match_players:
             discord_id = match_player.league_user.discord_user.user_id
-        #     discord_user = await bot.fetch_user(discord_id)
-        #     embedVar.add_field(name=str(discord_user.display_name), value=str(match_player.champion), inline=False)
+            discord_user = await bot.fetch_user(discord_id)
+            embedVar.add_field(name=str(discord_user.display_name), value=str(match_player.champion), inline=False)
+        embedVar.add_field(name="Votes placed: ", value=str(len(match.votes)))
         return embedVar
