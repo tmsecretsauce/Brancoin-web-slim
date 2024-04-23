@@ -2,11 +2,12 @@ from functools import lru_cache
 import json
 from os import name
 import os
+import traceback
 from riotwatcher import LolWatcher, RiotWatcher
 import riotwatcher
 from riotwatcher.LolWatcher import MatchApiV5
 
-from models.models import LeagueUser
+from models.models import LeagueUser, Match
 
 class LeagueService():
     region_riot_api = "americas"
@@ -17,10 +18,18 @@ class LeagueService():
         self.api_lol_watcher = lol_watcher
         self.api_match : MatchApiV5 = lol_watcher.match
 
-    # todo: worth using memcached here instead? probably not tbh... but it's a nice thought.
-    @lru_cache(maxsize=20)
+    @lru_cache(maxsize=40)
+    def get_puuid_with_cache(self, summoner_name, tag_line):
+        try:
+            print("Feteched puuid from riot server")
+            return self.api_riot_watcher.account.by_riot_id(region=self.region_riot_api, game_name=summoner_name, tag_line=tag_line)['puuid']
+        except:
+            print(f"Failed to find puuid for {summoner_name}")
+            return None
+
     def get_puuid(self, league_user: LeagueUser):
-        return self.api_riot_watcher.account.by_riot_id(region=self.region_riot_api, game_name=league_user.summoner_name, tag_line=league_user.tag)['puuid']
+        print("Fetching puuid")
+        return self.get_puuid_with_cache(league_user.summoner_name, league_user.tag)
     
     def get_puuids(self, league_users: list[LeagueUser]):
         return map(lambda x: (x, self.get_puuid(x)), league_users)
@@ -31,7 +40,10 @@ class LeagueService():
     def get_valid_game(self, league_user: LeagueUser, trackable_users: list[LeagueUser]):
         print("get valid game for " )
         try:
-            spectator_data = self.api_lol_watcher.spectator.by_summoner(self.region_lol, self.get_puuid(league_user))
+            puuid = self.get_puuid(league_user)
+            if puuid:
+                spectator_data = self.api_lol_watcher.spectator.by_summoner(self.region_lol, puuid)
+            else: return None
         except: 
             return None
         print ("got active game for " )
@@ -53,7 +65,11 @@ class LeagueService():
             return None
     
     def get_valid_games(self, league_users: list[LeagueUser], trackable_users: list[LeagueUser]):
-        all_valid_games = list(filter(lambda x: x is not None, map(lambda league_user: self.get_valid_game(league_user, trackable_users), league_users)))
+        all_valid_games = []
+        for league_user in league_users:
+            valid_game = self.get_valid_game(league_user, trackable_users)
+            if valid_game:
+                all_valid_games.append(valid_game)
         unique_valid_games = {x['spectator_data']['gameId']: x for x in all_valid_games}.values()
         return unique_valid_games
     
@@ -68,3 +84,28 @@ class LeagueService():
 
     def find_participant(self, user_to_find: LeagueUser, participants_to_search): 
         return next(filter(lambda participant: participant['puuid'] == self.get_puuid(user_to_find), participants_to_search), None)
+    
+    def get_game(self, game_to_check: Match):
+        try:
+            game = self.api_lol_watcher.match.by_id(self.region_lol, f"NA1_{str(game_to_check.match_id)}")
+            extra_data = {}
+            try:
+                our_players = game_to_check.match_players
+                our_team_id = None
+                damage_dealt = []
+                for our_player in our_players:
+                    puuid = self.get_puuid(our_player.league_user)
+                    participant_data = next(filter(lambda p : p['puuid'] == puuid, game['info']['participants']))
+                    damage_dealt.append((our_player.league_user, participant_data['totalDamageDealtToChampions']))
+                    extra_data['our_team_won'] = participant_data['win'] == True
+
+                extra_data['damage_dealt'] = damage_dealt
+                print("extra_data")
+                print(extra_data)
+            except Exception as e: 
+                print("failed to process data for game game")
+                print(e)
+                print(traceback.format_exc())
+            return {'game_data': game, 'extra_data':extra_data}
+        except:
+            return None

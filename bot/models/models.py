@@ -46,6 +46,10 @@ class Match(Base):
 
     match_players: Mapped[List["MatchPlayer"]] = relationship(back_populates="match")
 
+    
+    def __repr__(self) -> str:
+        return f"tag(match_id={self.match_id!r}, finished={self.finished!r}, start_time={self.start_time!r})"
+
 class MatchPlayer(Base):
     __tablename__ = "match_player"
     match_id: Mapped[str] = mapped_column(ForeignKey("match.match_id"), primary_key=True)
@@ -59,18 +63,28 @@ class MatchPlayer(Base):
         PrimaryKeyConstraint('match_id', 'league_user_id'),
     )
 
+    def __repr__(self) -> str:
+        return f"MatchPlayer(match_id={self.match_id!r}, league_user_id={self.league_user_id!r}, champion={self.champion!r},)"
 
-class Jackpot(Base):
-    __tablename__ = "jackpot"
+
+class Guild(Base):
+    __tablename__ = "guild"
     guild_id: Mapped[str] = mapped_column(primary_key=True, unique=True)
-    brancoins = mapped_column(Integer, server_default="10")
+    brancoins:Mapped[int] = mapped_column(server_default="10") # jackpot
+    broadcast_channel_id: Mapped[str] = mapped_column(nullable=True)
 
     def __repr__(self) -> str:
-        return f"Jackpot(guild_id={self.guild_id!r}, brancoins={self.brancoins!r})"
+        return f"Guild(guild_id={self.guild_id!r}, brancoins={self.brancoins!r})"
 
 class Votes(Base):
     __tablename__ = "votes"
     id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
     voter: Mapped[str] = mapped_column(ForeignKey("user_account.id"))
-    target_league_player: Mapped[str] = mapped_column(ForeignKey("league_user.id"))
-    type_of_vote: Mapped[str]
+    target_league_player: Mapped[str] = mapped_column(ForeignKey("league_user.id"), nullable=True)
+    type_of_vote: Mapped[int]
+
+    def __repr__(self) -> str:
+        return f"Votes(id={self.id!r}, voter={self.voter!r}, target_league_player={self.target_league_player!r}, type_of_vote={self.type_of_vote})"
+
+
+    

@@ -3,7 +3,7 @@
 from discord import Message
 import discord
 from models.dbcontainer import DbService
-from models.models import Jackpot, Match, User
+from models.models import Guild, Match, User
 from discord.basecommand import BaseCommand
 from discord.ext.commands import Bot
 
@@ -16,5 +16,5 @@ class ViewJackpot(BaseCommand):
             return
         
         with dbservice.Session() as session: 
-            jackpot = session.query(Jackpot).filter(Jackpot.guild_id == str(message.guild.id)).first()
-            await message.reply(f"Jackpot is currently {jackpot.brancoins} {self.custom_emoji}")
+            guild = session.query(Guild).filter(Guild.guild_id == str(message.guild.id)).first()
+            await message.reply(f"Jackpot is currently {guild.brancoins} {self.custom_emoji}")
