@@ -116,6 +116,7 @@ class DiscordMonitorClient(commands.Bot):
                     session.commit()
                     
                     # we're in a side thread, to output to discord we need to post to the asyncio looper
+                    # session can't carryover :(
                     asyncio.run_coroutine_threadsafe(self.output_votes_results(open_match.match_id, results), self.loop)
                 else:
                     print("match is not closed")
@@ -137,22 +138,20 @@ class DiscordMonitorClient(commands.Bot):
                 output = ""
                 match = session.query(Match).filter(Match.match_id == match_id).first()
                 for vote in match.votes:
-                    print("going thru a vote")
                     print(vote)
                     guy = await self.fetch_user(vote.voter.user_id)
                     if vote.type_of_vote == VoteType.WIN.value or vote.type_of_vote == VoteType.LOSE.value:
                         we_win = results['extra_data']['our_team_won']
-                        if vote.type_of_vote == VoteType.WIN.value and we_win:
-                            print("a")
-                            output += f"{guy.display_name } won {vote.brancoins} because the squad won their game! ::tada: :tada: :tada: "
-                        elif vote.type_of_vote == VoteType.LOSE.value and we_win == False:
-                            print("b")
-                            output += f"{guy.display_name } won {vote.brancoins} because the squad won their game! :tada: :tada: :tada: "
-                        else:
-                            print("c")
-                            output += f"{guy.display_name } lost {vote.brancoins} ... don't know why you put your faith in clowns... :flushed_clown:  :flushed_clown:  :flushed_clown: "
-                print("yeet")
-                print(output)
+                        if vote.type_of_vote == VoteType.WIN.value:
+                            if we_win:
+                                output += f"{guy.display_name } won {vote.brancoins} because the squad won their game! ::tada: :tada: :tada: \n"
+                            else:
+                                output += f"{guy.display_name } lost {vote.brancoins} ... don't know why you put your faith in clowns... :clown:  :clown:  :clown: \n"
+                        elif vote.type_of_vote == VoteType.LOSE.value:
+                            if we_win == False:
+                                output += f"{guy.display_name } won {vote.brancoins} because the squad is curzed! :tada: :tada: :tada: \n"
+                            else:
+                                output += f"{guy.display_name } lost {vote.brancoins} ... why didn't you believe in da boiz :clown:  :clown:  :clown: \n"
                 await self.broadcast_all_str(session, output)
         except Exception as e: 
             print(e)
@@ -200,11 +199,12 @@ class DiscordMonitorClient(commands.Bot):
                 for open_match in open_matches:
                     embedVar = await ViewMatches.generate_embed_for_match(open_match, self)
                     await self.broadcast_all(session, embedVar)
+                    await self.broadcast_all_str(session, "You have 5 minutes to vote!")
         except Exception as e: 
             print(e)
             print(traceback.format_exc())
 
-    async def broadcast_all(self, session, embed):
+    async def broadcast_all(self, session, embed: discord.Embed):
         guilds = session.query(Guild).filter(Guild.broadcast_channel_id != None).all()
         for guild in guilds:
             broadcast_channel = await self.fetch_channel(guild.broadcast_channel_id)
@@ -214,6 +214,11 @@ class DiscordMonitorClient(commands.Bot):
         guilds = session.query(Guild).filter(Guild.broadcast_channel_id != None).all()
         for guild in guilds:
             broadcast_channel = await self.fetch_channel(guild.broadcast_channel_id)
+            if guild.broadcast_role_id != None:
+                disc_guild_obj = await self.fetch_guild(guild.guild_id)
+                disc_roles = await disc_guild_obj.fetch_roles()
+                disc_role: discord.Role = discord.utils.get(disc_roles, id=int(guild.broadcast_role_id))
+                msg += f"\n{disc_role.mention}"
             await broadcast_channel.send(msg)
 
     # def wrap(func):

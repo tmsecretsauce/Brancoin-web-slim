@@ -9,7 +9,7 @@ from discord.basecommand import BaseCommand
 
 
 class Discover(BaseCommand):
-    chance_of_free_coin = 1 / 5
+    chance_of_free_coin = 1 / 25
     async def process(self, ctx, message: Message, dbservice: DbService):
         if random.uniform(0, 1) < self.chance_of_free_coin:
             with dbservice.Session() as session: 

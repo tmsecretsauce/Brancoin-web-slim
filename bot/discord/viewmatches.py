@@ -37,4 +37,7 @@ class ViewMatches(BaseCommand):
             discord_user = await bot.fetch_user(discord_id)
             embedVar.add_field(name=str(discord_user.display_name), value=str(match_player.champion), inline=False)
         embedVar.add_field(name="Votes placed: ", value=str(len(match.votes)))
+        vote_time_left_seconds = 5*60 - match.get_time_since_start().seconds
+        vote_time_left_seconds = vote_time_left_seconds if vote_time_left_seconds >= 0 else 0
+        embedVar.add_field(name="Time left to vote: ", value = str(vote_time_left_seconds) + "s")
         return embedVar

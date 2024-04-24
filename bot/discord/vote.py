@@ -40,6 +40,15 @@ class AddVote(BaseCommand):
                 match_fetch_query = match_fetch_query.filter(Match.match_id == match_id)
             target_match = match_fetch_query.first()
 
+            for match_player in target_match.match_players:
+                if vote_type == VoteType.LOSE and source_user.user_id == match_player.league_user.discord_user.user_id:
+                    await message.reply("Leave the throwing to tapson, dufus")
+                    return
+
+            if target_match.get_time_since_start().seconds > 5*60:
+                await message.reply("Too late idiot")
+                return
+
             new_vote = Votes()
             new_vote.type_of_vote = vote_type.value
             new_vote.processed = False

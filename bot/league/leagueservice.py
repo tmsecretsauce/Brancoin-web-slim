@@ -55,7 +55,7 @@ class LeagueService():
         user_participant = list(map(lambda user: {'league_user': user, 'participant_json': self.find_participant(user, spectator_data['participants'])}, trackable_users)) 
         valid_participants = list(filter(lambda x: x['participant_json'] is not None, user_participant))
 
-        if len(valid_participants) > 1:
+        if len(valid_participants) > 0:
             return {
                 'spectator_data': spectator_data,
                 'valid_participants': valid_participants

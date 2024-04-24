@@ -34,6 +34,7 @@ class LeagueUser(Base):
     
     discord_user_id = mapped_column(Integer, ForeignKey("user_account.id"))
     discord_user: Mapped["User"] = relationship(back_populates="league_user")
+    # todo: make this unique by summoner_name, tag so we don't have multiple discord_users possible for a league_user
 
     def __repr__(self) -> str:
         return f"tag(id={self.tag!r}, summoner_name={self.summoner_name!r}, trackable={self.trackable!r}, voteable={self.voteable!r})"
@@ -47,6 +48,8 @@ class Match(Base):
     match_players: Mapped[List["MatchPlayer"]] = relationship(back_populates="match")
     votes: Mapped[List["Votes"]] = relationship()
 
+    def get_time_since_start(self) -> datetime.timedelta:
+        return datetime.datetime.now() - self.start_time
     
     def __repr__(self) -> str:
         return f"tag(match_id={self.match_id!r}, finished={self.finished!r}, start_time={self.start_time!r})"
@@ -73,6 +76,7 @@ class Guild(Base):
     guild_id: Mapped[str] = mapped_column(primary_key=True, unique=True)
     brancoins:Mapped[int] = mapped_column(server_default="10") # jackpot
     broadcast_channel_id: Mapped[str] = mapped_column(nullable=True)
+    broadcast_role_id: Mapped[str] = mapped_column(nullable=True)
 
     def __repr__(self) -> str:
         return f"Guild(guild_id={self.guild_id!r}, brancoins={self.brancoins!r})"
@@ -91,6 +95,7 @@ class Votes(Base):
 
     def __repr__(self) -> str:
         return f"Votes(id={self.id!r}, voter={self.voter!r}, target_league_player={self.target_league_player!r}, type_of_vote={self.type_of_vote})"
+    
 
 
     
