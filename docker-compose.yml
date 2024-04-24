@@ -7,6 +7,8 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_USER=dev
       - POSTGRES_DB=brancoin
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
   adminer:
     image: adminer
@@ -27,4 +29,6 @@ services:
     depends_on:
       - db
     
+volumes:
+  pgdata:
      
