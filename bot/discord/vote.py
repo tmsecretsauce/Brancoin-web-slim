@@ -28,6 +28,9 @@ class AddVote(BaseCommand):
         num_coins = int(arggs[1])
         match_id = arggs[2] if 2 < len(arggs) else None
 
+        if num_coins <= 0:
+            return
+
         with db.Session() as session:
             source_user = session.query(User).filter(User.user_id == str(message.author.id)).first()
             if source_user.brancoins < num_coins:

@@ -28,6 +28,8 @@ class Gift(BaseCommand):
 
         try:
             num = int(command_breakdown[3]) 
+            if num <= 0:
+                return
         except:
             await message.reply("How many coin???")
             return

@@ -15,7 +15,7 @@ class User(Base):
     guild_id: Mapped[str]
     brancoins  = mapped_column(Integer, server_default="10")
 
-    league_user: Mapped["LeagueUser"] = relationship(back_populates="discord_user")
+    league_users: Mapped[List["LeagueUser"]]= relationship(back_populates="discord_user")
 
     __table_args__ = (
         UniqueConstraint('user_id', 'guild_id', name='user_guild_uc'),
@@ -33,7 +33,7 @@ class LeagueUser(Base):
     voteable: Mapped[bool]
     
     discord_user_id = mapped_column(Integer, ForeignKey("user_account.id"))
-    discord_user: Mapped["User"] = relationship(back_populates="league_user")
+    discord_user: Mapped["User"] = relationship(back_populates="league_users")
     # todo: make this unique by summoner_name, tag so we don't have multiple discord_users possible for a league_user
 
     def __repr__(self) -> str:

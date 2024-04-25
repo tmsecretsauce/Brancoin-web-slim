@@ -28,7 +28,6 @@ class LeagueService():
             return None
 
     def get_puuid(self, league_user: LeagueUser):
-        print("Fetching puuid")
         return self.get_puuid_with_cache(league_user.summoner_name, league_user.tag)
     
     def get_puuids(self, league_users: list[LeagueUser]):

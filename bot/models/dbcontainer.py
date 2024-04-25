@@ -9,7 +9,7 @@ from envvars import Env
 
 class DbService():
     def __init__(self, url) -> None:
-        self.engine = create_engine(url)
+        self.engine = create_engine(url, pool_size=20)
         self.Session = sessionmaker(self.engine)
 
 
