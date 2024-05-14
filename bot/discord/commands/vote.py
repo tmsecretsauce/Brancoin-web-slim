@@ -8,23 +8,30 @@ from discord.VoteType import VoteType
 from models.dbcontainer import DbService
 from models.models import Match, User, Votes
 from discord.basecommand import BaseCommand
-import random
 
 
 class AddVote(BaseCommand):
-
     prefix = "bran vote"
     usage = f"{prefix} [win] [num_coins] [optional: match_id]\n {prefix} [lose] [num_coins] [optional: match_id]"
     async def process(self, ctx, message: Message, dbservice: DbService):
-        if not message.content.startswith(self.prefix):
+        if not self.does_prefix_match(self.prefix, message.content):
             return
+
         command_breakdown = message.content.split()
 
         if command_breakdown[2] == "win" or command_breakdown[2] == "lose":
             await self.add_win_loss_vote(dbservice, command_breakdown[2:], message)
 
     async def add_win_loss_vote(self, db: DbService, arggs, message: discord.Message):
-        vote_type = VoteType.WIN if arggs[0] == "win" else VoteType.LOSE
+        vote_type = None
+        if arggs[0] == "win":
+            vote_type = VoteType.WIN
+        elif arggs[0] == "lose":
+            vote_type = VoteType.LOSE
+
+        if vote_type is None:
+            return
+
         num_coins = int(arggs[1])
         match_id = arggs[2] if 2 < len(arggs) else None
 

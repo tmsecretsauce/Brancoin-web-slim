@@ -10,19 +10,22 @@ import asyncio
 import discord.ext
 import discord.ext.commands
 import sqlalchemy
+
+from discord.commands.beg import Beg
+from discord.commands.vote import AddVote
+from discord.commands.viewvotes import ViewVotes
 from discord.VoteType import VoteType
-from discord.vote import AddVote
-from discord.addbroadcast import AdminAddBroadcast
+from discord.commands.addbroadcast import AdminAddBroadcast
 from discord.repeattimer import RepeatTimer
-from discord.addleague import AdminAddLeague
-from discord.jackpot import ViewJackpot
-from discord.viewmatches import ViewMatches
-from discord.coins import Coins
-from discord.spin import Spin
-from discord.gift import Gift
-from discord.coin import Coin
+from discord.commands.addleague import AdminAddLeague
+from discord.commands.jackpot import ViewJackpot
+from discord.commands.viewmatches import ViewMatches
+from discord.commands.coins import Coins
+from discord.commands.spin import Spin
+from discord.commands.gift import Gift
+from discord.commands.coin import Coin
 from models.models import Guild, LeagueUser, MatchPlayer, User, Match
-from discord.discover import Discover
+from discord.commands.discover import Discover
 from league.leaguecontainer import LeagueContainer
 from models.dbcontainer import DbContainer, DbService
 from league.leagueservice import LeagueService
@@ -34,7 +37,7 @@ import traceback
 
 @inject
 class DiscordMonitorClient(commands.Bot):
-    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote()]
+    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote(), ViewVotes(), Beg()]
     def __init__(self, intents, dbservice: DbService = Provide[DbContainer.service], league_service: LeagueService = Provide[LeagueContainer.service]):
         super().__init__(intents=intents, command_prefix="b ")
         self.db = dbservice
@@ -78,14 +81,14 @@ class DiscordMonitorClient(commands.Bot):
     def populate_users(self, guild: discord.Guild):
         with self.db.Session() as session:
             for member in guild.members:
-                    if session.query(User).filter(User.guild_id == str(guild.id), User.user_id == str(member.id)).count() == 0:
-                        user = User()
-                        user.guild_id = guild.id
-                        user.user_id = member.id
-                        session.add(user)
-                        print("adding new user")
-                    else:
-                        print("user already exists")
+                if session.query(User).filter(User.guild_id == str(guild.id), User.user_id == str(member.id)).count() == 0:
+                    user = User()
+                    user.guild_id = guild.id
+                    user.user_id = member.id
+                    session.add(user)
+                    print("adding new user")
+                else:
+                    print("user already exists")
             session.commit()
 
 
