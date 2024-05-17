@@ -31,8 +31,8 @@ services:
       - 8081:8081
     depends_on:
       - db
-    volumes:
-      - ./bot/:/usr/src/app
+    # volumes:
+    #   - ./bot/:/usr/src/app
     
 volumes:
   pgdata:

@@ -31,13 +31,14 @@ def get_image(dbservice: DbService = Provide[DbContainer.service]):
 
     with dbservice.Session() as session:
         card = session.query(Card).filter(Card.id == id).first()
+        print(card.description)
         input_data = {
             "card": card.card_style,
             "Title": card.title,
             "attribute": card.attribute,
             "Level": int(card.level),
             "Type": card.type,
-            "Descripton": card.description,
+            "Descripton": str(card.description).replace('\\n','\n'),
             "Atk": card.atk,
             "Def": card.defe
             }
@@ -45,7 +46,6 @@ def get_image(dbservice: DbService = Provide[DbContainer.service]):
         output = CardConstructor(input_data)
         response.set_header('Content-type', 'image/png')
         output_card = output.generateCard()
-        print(output_card)
         return BytesIO(base64.b64decode(output_card))
 
     return "done"

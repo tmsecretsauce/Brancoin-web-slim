@@ -23,7 +23,7 @@ class ViewShop(BaseCommand):
             "attribute": card.attribute,
             "Level": int(card.level),
             "Type": card.type,
-            "Descripton": card.description,
+            "Descripton": str(card.description).replace('\\n','\n'),
             "Atk": card.atk,
             "Def": card.defe
             }
