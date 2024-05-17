@@ -1,8 +1,9 @@
 import datetime
 from typing import List
 from typing import Optional
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, Integer, PrimaryKeyConstraint, UniqueConstraint, null, true
+from sqlalchemy import BLOB, ForeignKey, ForeignKeyConstraint, Integer, LargeBinary, PrimaryKeyConstraint, UniqueConstraint, null, true
 from sqlalchemy import String
+import sqlalchemy
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -16,6 +17,7 @@ class User(Base):
     brancoins  = mapped_column(Integer, server_default="10")
 
     league_users: Mapped[List["LeagueUser"]]= relationship(back_populates="discord_user")
+    owned_cards: Mapped[List["OwnedCard"]]= relationship(back_populates="owner")
 
     __table_args__ = (
         UniqueConstraint('user_id', 'guild_id', name='user_guild_uc'),
@@ -97,5 +99,47 @@ class Votes(Base):
         return f"Votes(id={self.id!r}, voter={self.voter!r}, target_league_player={self.target_league_player!r}, type_of_vote={self.type_of_vote})"
     
 
+class Image(Base):
+    __tablename__ = "images"
+    label = mapped_column(String, primary_key=True, unique=True)
+    bin = mapped_column(LargeBinary)
 
+    def __repr__(self) -> str:
+        return f"Images(label={self.label!r}"
     
+class OwnedCard(Base):
+    __tablename__ = "ownedcards"
+    
+    id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
+    owner_id: Mapped[str] = mapped_column(ForeignKey("user_account.id"))
+    card_id: Mapped[Integer] = mapped_column(ForeignKey("cards.id"))
+
+    owner: Mapped["User"] = relationship(back_populates="owned_cards")
+    card: Mapped["Card"] = relationship()
+
+    def __repr__(self) -> str:
+        return f"OwnedCard(id={self.id!r}, owner_id={self.owner_id!r}, card_id={self.card_id!r},)"
+    
+class Card(Base):
+    __tablename__ = "cards"
+    id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
+    card_style: Mapped[str] 
+    title: Mapped[str] 
+    attribute: Mapped[str] 
+    level: Mapped[str] 
+    type: Mapped[str] 
+    description: Mapped[str] 
+    atk: Mapped[str] 
+    defe: Mapped[str] 
+    cost: Mapped[int] 
+    image_label: Mapped[str] = mapped_column(ForeignKey("images.label"))
+    image: Mapped["Image"] = relationship()
+
+    def __repr__(self) -> str:
+        return f"Card(title={self.title!r}"
+    
+class Shop(Base):
+    __tablename__ = "shop"
+    id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
+    card_id: Mapped[Integer] = mapped_column(ForeignKey("cards.id"))
+    card: Mapped["Card"] = relationship()

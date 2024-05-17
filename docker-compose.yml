@@ -26,8 +26,13 @@ services:
       - POSTGRES_USER=dev
       - POSTGRES_DB=brancoin
       - IS_DEBUG=true
+      - WEB_PORT=8081
+    ports:
+      - 8081:8081
     depends_on:
       - db
+    volumes:
+      - ./bot/:/usr/src/app
     
 volumes:
   pgdata:

@@ -11,6 +11,7 @@ import discord.ext
 import discord.ext.commands
 import sqlalchemy
 
+from discord.commands.viewshop import ViewShop
 from discord.commands.beg import Beg
 from discord.commands.vote import AddVote
 from discord.commands.viewvotes import ViewVotes
@@ -37,7 +38,8 @@ import traceback
 
 @inject
 class DiscordMonitorClient(commands.Bot):
-    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote(), ViewVotes(), Beg()]
+    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote(), ViewVotes(), Beg(), ViewShop()]
+    @inject
     def __init__(self, intents, dbservice: DbService = Provide[DbContainer.service], league_service: LeagueService = Provide[LeagueContainer.service]):
         super().__init__(intents=intents, command_prefix="b ")
         self.db = dbservice
@@ -249,15 +251,6 @@ class DiscordMonitorClient(commands.Bot):
     #         await asyncio.sleep(120)  # task runs every 60 seconds
 
 def run():
-
-    container = LeagueContainer()
-    container.init_resources()
-    container.wire(modules=[__name__])
-
-    container2 = DbContainer()
-    container2.init_resources()
-    container2.wire(modules=[__name__])
-
     itnent = discord.Intents.default()
     itnent.members = True
     itnent.message_content  = True
