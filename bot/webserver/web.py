@@ -46,7 +46,7 @@ def get_image(dbservice: DbService = Provide[DbContainer.service]):
         output = CardConstructor(input_data)
         response.set_header('Content-type', 'image/png')
         output_card = output.generateCard()
-        return BytesIO(base64.b64decode(output_card))
+        return BytesIO(output_card)
 
     return "done"
 
