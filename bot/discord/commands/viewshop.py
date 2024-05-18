@@ -69,7 +69,7 @@ class ViewShop(BaseCommand):
                 drawn_cards = []
                 drawn_cards.append(session.query(Card).filter(Card.shoppable == True, Card.cost <= 100).order_by(func.random()).first())
                 drawn_cards.append(session.query(Card).filter(Card.shoppable == True, Card.cost > 100, Card.cost <= 500).order_by(func.random()).first())
-                drawn_cards.append(session.query(Card).filter(Card.shoppable == True, Card.cost > 500, Card.cost <= 1000).order_by(func.random()).first())
+                drawn_cards.append(session.query(Card).filter(Card.shoppable == True, Card.cost > 100).order_by(func.random()).first())
                 drawn_cards.append(session.query(Card).filter(Card.shoppable == True, Card.cost > 1000).order_by(func.random()).first())
                 drawn_cards.append(session.query(Card).filter(Card.shoppable == True).order_by(func.random()).first())
                 drawn_cards.append(session.query(Card).filter(Card.shoppable == True).order_by(func.random()).first())
