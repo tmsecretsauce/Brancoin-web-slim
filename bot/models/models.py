@@ -124,7 +124,7 @@ class Card(Base):
     __tablename__ = "cards"
     id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
     card_style: Mapped[str] 
-    title: Mapped[str] = mapped_column(String, unique=True)
+    title: Mapped[str] = mapped_column(String)
     attribute: Mapped[str] 
     level: Mapped[str] 
     type: Mapped[str] 
