@@ -11,6 +11,8 @@ import discord.ext
 import discord.ext.commands
 import sqlalchemy
 
+from discord.commands.addcard import AdminAddCard
+from discord.commands.addimage import AdminAddImage
 from discord.commands.selectcard import SelectCard
 from discord.commands.inventory import Inventory
 from discord.commands.buy import Buy
@@ -41,7 +43,7 @@ import traceback
 
 @inject
 class DiscordMonitorClient(commands.Bot):
-    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote(), ViewVotes(), Beg(), ViewShop(), Buy(), Inventory(), SelectCard()]
+    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote(), ViewVotes(), Beg(), ViewShop(), Buy(), Inventory(), SelectCard(), AdminAddImage(), AdminAddCard()]
     @inject
     def __init__(self, intents, dbservice: DbService = Provide[DbContainer.service], league_service: LeagueService = Provide[LeagueContainer.service]):
         super().__init__(intents=intents, command_prefix="b ")
@@ -65,7 +67,8 @@ class DiscordMonitorClient(commands.Bot):
         output = "All commands: "
         for command in self.commands:
             if hasattr(command, 'usage'):
-                output = output + f"\n {command.usage}"
+                if not hasattr(command, 'admin') or command.admin == message.author.id:
+                    output = output + f"\n {command.usage}"
         await message.reply(output)
 
     # async def setup_hook(self) -> None:

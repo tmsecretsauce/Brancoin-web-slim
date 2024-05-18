@@ -14,7 +14,7 @@ class AdminAddLeague(BaseCommand):
     usage = prefix + " [league_name] [league_tag] [discord_at] [t_val=True/False] [v_val=True/False]"
     admin = 114930910884790276
     async def process(self, ctx, message: Message, dbservice: DbService):
-        if not message.content.startswith(self.prefix):
+        if not self.does_prefix_match(self.prefix, message.content):
             return
         
         if message.author.id != self.admin:
