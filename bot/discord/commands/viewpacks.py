@@ -36,7 +36,7 @@ class ViewPacks(BaseCommand):
             embed.set_author(name="Check out these boosters!", icon_url="https://i.imgur.com/L4Ps6O5.png")
             
             for pack in packs:
-                embed.add_field(name="Pack", value=str(pack.image_label), inline=True)
+                embed.add_field(name="Pack", value=str(pack.id), inline=True)
                 embed.add_field(name="Cost", value=str(pack.cost), inline=True)
                 embed.add_field(name="Description", value=str(pack.desc), inline=True)
                 embed.add_field(name="", value="", inline=False)
