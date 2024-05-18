@@ -62,7 +62,7 @@ class ViewShop(BaseCommand):
         card_images = []
         card_costs = []
         with dbservice.Session() as session: 
-            shop_items = session.query(Shop).all()
+            shop_items = session.query(Shop).join(Card, Shop.card).order_by(Card.cost.asc(), Card.id.asc()).all()
             for shop_item in shop_items:
                 card_images.append(self.card_to_image(shop_item.card))
                 card_costs.append(shop_item.card.cost)

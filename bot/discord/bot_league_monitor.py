@@ -11,6 +11,8 @@ import discord.ext
 import discord.ext.commands
 import sqlalchemy
 
+from discord.commands.inventory import Inventory
+from discord.commands.buy import Buy
 from discord.commands.viewshop import ViewShop
 from discord.commands.beg import Beg
 from discord.commands.vote import AddVote
@@ -38,7 +40,7 @@ import traceback
 
 @inject
 class DiscordMonitorClient(commands.Bot):
-    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote(), ViewVotes(), Beg(), ViewShop()]
+    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote(), ViewVotes(), Beg(), ViewShop(), Buy(), Inventory()]
     @inject
     def __init__(self, intents, dbservice: DbService = Provide[DbContainer.service], league_service: LeagueService = Provide[LeagueContainer.service]):
         super().__init__(intents=intents, command_prefix="b ")
