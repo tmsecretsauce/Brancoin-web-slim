@@ -1,11 +1,13 @@
 
 
 import base64
+import datetime
 from io import BytesIO
 import os
 from PIL import Image, ImageFont, ImageDraw
 from discord import Message
 import discord
+from sqlalchemy import func
 from models.dbcontainer import DbService
 from models.models import Card, Shop, User
 from discord.basecommand import BaseCommand
@@ -59,10 +61,44 @@ class ViewShop(BaseCommand):
         if not self.does_prefix_match(self.prefix, message.content):
             return
         
+        
+        with dbservice.Session() as session: 
+            if session.query(Shop).filter(Shop.date_added == datetime.date.today()).count() < 4:
+                print("no shop, populating")
+                featured_cards = session.query(Card).filter(Card.featured == True).all()
+                drawn_cards = []
+                drawn_cards.append(session.query(Card).filter(Card.shoppable == True, Card.cost <= 100).order_by(func.random()).first())
+                drawn_cards.append(session.query(Card).filter(Card.shoppable == True, Card.cost > 100, Card.cost <= 500).order_by(func.random()).first())
+                drawn_cards.append(session.query(Card).filter(Card.shoppable == True, Card.cost > 500, Card.cost <= 1000).order_by(func.random()).first())
+                drawn_cards.append(session.query(Card).filter(Card.shoppable == True, Card.cost > 1000).order_by(func.random()).first())
+                drawn_cards.append(session.query(Card).filter(Card.shoppable == True).order_by(func.random()).first())
+                drawn_cards.append(session.query(Card).filter(Card.shoppable == True).order_by(func.random()).first())
+
+                filtered_drawn_cards = list(filter(lambda x: x is not None, drawn_cards))
+                
+                cards_to_add = []
+                for featuredCard in featured_cards:
+                    cards_to_add.append(featuredCard)
+                while len(cards_to_add) < 4:
+                    newShopCard = Shop()
+                    cards_to_add.append(filtered_drawn_cards.pop(0))
+                while len(cards_to_add) < 4:
+                    cards_to_add.append(cards_to_add[0])
+
+                for card_to_add in cards_to_add:
+                    if card_to_add:
+                        newShopCard = Shop()
+                        print(card_to_add)
+                        newShopCard.card = card_to_add
+                        newShopCard.date_added = datetime.date.today()
+                        session.add(newShopCard)
+
+                session.commit()
+
         card_images = []
         card_costs = []
         with dbservice.Session() as session: 
-            shop_items = session.query(Shop).join(Card, Shop.card).order_by(Card.cost.asc(), Card.id.asc()).all()
+            shop_items = session.query(Shop).join(Card, Shop.card).filter(Shop.date_added == datetime.date.today()).order_by(Card.cost.asc(), Card.id.asc()).limit(4).all()
             for shop_item in shop_items:
                 card_images.append(self.card_to_image(shop_item.card))
                 card_costs.append(shop_item.card.cost)
@@ -78,3 +114,5 @@ class ViewShop(BaseCommand):
         shop_map.save(buffered, format="PNG")
         discord_shop_item = discord.File(BytesIO(buffered.getvalue()), filename="shop.png")
         await message.reply(file=discord_shop_item)
+
+        

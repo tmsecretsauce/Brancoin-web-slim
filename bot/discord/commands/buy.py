@@ -1,5 +1,6 @@
 
 
+import datetime
 from io import BytesIO
 import PIL
 from discord import Message
@@ -25,7 +26,7 @@ class Buy(BaseCommand):
         shop_idx = int(command_breakdown[2]) 
         with dbservice.Session() as session: 
             source = session.query(User).filter(User.user_id == str(message.author.id), User.guild_id == str(message.guild.id)).first()
-            shop = session.query(Shop).join(Card, Shop.card).order_by(Card.cost.asc(), Card.id.asc()).all()
+            shop = session.query(Shop).join(Card, Shop.card).filter(Shop.date_added == datetime.date.today()).order_by(Card.cost.asc(), Card.id.asc()).limit(4).all()
             selected_shop_item: Shop = shop[shop_idx - 1]
 
             if source.brancoins < selected_shop_item.card.cost:

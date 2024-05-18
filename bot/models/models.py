@@ -134,6 +134,8 @@ class Card(Base):
     cost: Mapped[int] 
     image_label: Mapped[str] = mapped_column(ForeignKey("images.label"))
     image: Mapped["Image"] = relationship()
+    shoppable: Mapped[bool] = mapped_column(server_default="t")
+    featured: Mapped[bool] = mapped_column(server_default="f")
 
     def __repr__(self) -> str:
         return f"Card(title={self.title!r}"
@@ -143,3 +145,4 @@ class Shop(Base):
     id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
     card_id: Mapped[Integer] = mapped_column(ForeignKey("cards.id"))
     card: Mapped["Card"] = relationship()
+    date_added: Mapped[datetime.date] = mapped_column(server_default=str(datetime.date.today()))
