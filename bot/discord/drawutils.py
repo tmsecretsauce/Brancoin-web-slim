@@ -9,7 +9,7 @@ from cardmaker import CardConstructor
 class DrawUtils:
 
     @staticmethod
-    def card_to_image(card: Card):
+    def card_to_byte_image(card: Card):
         input_data = {
             "card": card.card_style,
             "Title": card.title,
@@ -23,7 +23,11 @@ class DrawUtils:
         input_data["image_card"] = Image.open(BytesIO(card.image.bin))
         output = CardConstructor(input_data)
         output_card = output.generateCard()
-        return Image.open(BytesIO(output_card))
+        return (BytesIO(output_card))
+
+    @staticmethod
+    def card_to_image(card: Card):
+        return Image.open(DrawUtils.card_to_byte_image(card))
     
     @staticmethod
     def draw_inv_card_spread(cards: List[Card], bg_size, card_grid, draw_blanks):

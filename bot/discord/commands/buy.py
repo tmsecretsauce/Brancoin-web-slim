@@ -17,22 +17,6 @@ class Buy(BaseCommand):
     prefix = "bran buy"
     usage = prefix + " [1/2/3/4]"
 
-    def card_to_image(self, card: Card):
-        input_data = {
-            "card": card.card_style,
-            "Title": card.title,
-            "attribute": card.attribute,
-            "Level": int(card.level),
-            "Type": card.type,
-            "Descripton": str(card.description).replace('\\n','\n'),
-            "Atk": card.atk,
-            "Def": card.defe
-            }
-        input_data["image_card"] = PIL.Image.open(BytesIO(card.image.bin))
-        output = CardConstructor(input_data)
-        output_card = output.generateCard()
-        return discord.File(BytesIO(output_card), filename=f"{card.title.replace(' ', '_')}.png")
-
     async def process(self, ctx, message: Message, dbservice: DbService):
         if not self.does_prefix_match(self.prefix, message.content):
             return
@@ -55,7 +39,7 @@ class Buy(BaseCommand):
             
             session.commit()
 
-            await message.reply(f"Congrats on the new card! {self.custom_emoji}", file= self.card_to_image(selected_shop_item.card))
+            await message.reply(f"Congrats on the new card! {self.custom_emoji}")
         
         
             

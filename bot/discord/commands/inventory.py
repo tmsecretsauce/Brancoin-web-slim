@@ -25,6 +25,10 @@ class Inventory(BaseCommand):
                 cards = []
                 for owned_card in guy.owned_cards:
                     cards.append(owned_card.card)
+                
+                if(len(cards) <= 0):
+                    await message.reply("No cards")
+                    return
 
                 card_pages: List[List[Card]] = self.split(cards, 12)
                 discord_files: List[discord.File] = []
