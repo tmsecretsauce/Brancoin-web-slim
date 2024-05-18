@@ -32,10 +32,4 @@ class SelectCard(BaseCommand):
                 await message.reply("???")
 
     def split(self, arr, size):
-        arrs = []
-        while len(arr) > size:
-            pice = arr[:size]
-            arrs.append(pice)
-            arr  = arr[1:]
-        arrs.append(arr)
-        return arrs
+        return [arr[i:i+size] for i in range(0,len(arr),size)]

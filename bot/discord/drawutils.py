@@ -30,21 +30,22 @@ class DrawUtils:
         return Image.open(DrawUtils.card_to_byte_image(card))
     
     @staticmethod
-    def draw_inv_card_spread(cards: List[Card], bg_size, card_grid, draw_blanks):
-        spread = Image.open(os.path.dirname(__file__) + "/../assets/inventorybg.jpg")
-        spread.resize(bg_size)
+    def draw_inv_card_spread(cards: List[Card], bg_size, card_grid, draw_blanks, bg = "inventorybg.jpg"):
+        spread = Image.open(os.path.dirname(__file__) + f"/../assets/{bg}")
+        spread = spread.resize(bg_size)
         
         margin_x = 20
         margin_y = 20
 
         draw = ImageDraw.Draw(spread)   
-        rect_size = (int(bg_size[0]/card_grid[0] - (margin_x/card_grid[0]*(card_grid[0]+1))), int(bg_size[1]/card_grid[1] - (margin_y/card_grid[1]*(card_grid[1]+1))))
+        rect_size = (int(bg_size[0]/card_grid[0] - (margin_x*1.5)), int(bg_size[1]/card_grid[1] - (1.5*margin_y)))
 
         card_idx = 0
         for y in range(card_grid[1]):
             for x in range(card_grid[0]):
                 top_left_x = rect_size[0]*x + margin_x*(x+1)
                 top_left_y = rect_size[1]*y + margin_y*(y+1)
+
                 bot_right_x = top_left_x + rect_size[0]
                 bot_right_y = top_left_y + rect_size[1]
                 pos = (top_left_x, top_left_y, bot_right_x, bot_right_y)
