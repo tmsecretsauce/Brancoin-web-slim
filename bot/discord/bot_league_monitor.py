@@ -145,17 +145,21 @@ class DiscordMonitorClient(commands.Bot):
                     vote.voter.brancoins += vote.brancoins * 2
                 vote.processed = True
                 session.add(vote)
+        if we_win:
+            for match_player in match.match_players:
+                match_player.league_user.discord_user.brancoins += 25
+                session.add(match_player)
 
     async def output_votes_results(self, match_id: str, results):
         try:
             with self.db.Session() as session:
                 output = ""
                 match = session.query(Match).filter(Match.match_id == match_id).first()
+                we_win = results['extra_data']['our_team_won']
                 for vote in match.votes:
                     print(vote)
                     guy = await self.fetch_user(vote.voter.user_id)
                     if vote.type_of_vote == VoteType.WIN.value or vote.type_of_vote == VoteType.LOSE.value:
-                        we_win = results['extra_data']['our_team_won']
                         if vote.type_of_vote == VoteType.WIN.value:
                             if we_win:
                                 output += f"{guy.display_name } won {vote.brancoins} because the squad won their game! ::tada: :tada: :tada: \n"
@@ -166,6 +170,10 @@ class DiscordMonitorClient(commands.Bot):
                                 output += f"{guy.display_name } won {vote.brancoins} because the squad is curzed! :tada: :tada: :tada: \n"
                             else:
                                 output += f"{guy.display_name } lost {vote.brancoins} ... why didn't you believe in da boiz :clown:  :clown:  :clown: \n"
+                if we_win:    
+                    for match_player in match.match_players:
+                        guy = await self.fetch_user(match_player.league_user.discord_user.user_id)
+                        output += f"{guy.display_name} made 25 for winning ! :tada: \n"
                 await self.broadcast_all_str(session, output)
         except Exception as e: 
             print(e)
@@ -264,7 +272,6 @@ def run():
     itnent.members = True
     itnent.message_content  = True
     client = DiscordMonitorClient(intents=itnent)
-
     print(f"Debug: {Env.is_debug}")
     client.run(Env.active_discord_token)
 
