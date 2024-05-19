@@ -45,7 +45,7 @@ class ViewMatches(BaseCommand):
         embedVar.add_field(name="Votes placed: ", value="", inline=False)
         for vote in match.votes:
             discord_user = await bot.fetch_user(vote.voter.user_id)
-            embedVar.add_field(name="Brancoins", value=f"{discord_user.display_name} {vote.type_of_vote} {vote.brancoins}", inline=False)
+            embedVar.add_field(name=f"{VoteType(vote.type_of_vote).name}", value=f"{discord_user.display_name} {vote.brancoins}", inline=False)
         
         embedVar.add_field(name="\u200b", value="", inline=False)
 
