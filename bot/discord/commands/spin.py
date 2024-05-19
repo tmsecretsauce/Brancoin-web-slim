@@ -28,7 +28,11 @@ class Spin(BaseCommand):
         with dbservice.Session() as session: 
             is_freebie = True if random.uniform(0, 1) < self.freebie_chance else False
             source = session.query(User).filter(User.user_id == str(message.author.id), User.guild_id == str(message.guild.id)).first()
-            jackpot = session.query(Guild).filter(Guild.guild_id == str(message.guild.id)).first()
+            guild = session.query(Guild).filter(Guild.guild_id == str(message.guild.id)).first()
+
+            if guild.broadcast_channel_id is not None and str(message.channel.id) != guild.broadcast_channel_id:
+                return ("Wrong channel, you clown :clown:")
+
             coin_change = 0
 
             if source.brancoins < self.cost:
@@ -45,12 +49,12 @@ class Spin(BaseCommand):
                     break
             won_jackpot = spin_val < self.jackpot_chance
 
-            jackpot_value = jackpot.brancoins
+            jackpot_value = guild.brancoins
             if won_jackpot:
                 coin_change += jackpot_value
-                jackpot.brancoins = 0
+                guild.brancoins = 0
             else:
-                jackpot.brancoins += self.cost
+                guild.brancoins += self.cost
                 coin_change += win_val
 
             source.brancoins += coin_change
@@ -69,7 +73,7 @@ class Spin(BaseCommand):
                     else:
                         output_msg = (f"Paid nothing!!! Farhan smiles upon you!!\nWon {win_val}!!!! Time to convert!!!!:maracas: <:Prayge:1038601127052193814> :maracas:")
 
-            session.add(jackpot)
+            session.add(guild)
             session.add(source)
             session.commit()
         return output_msg
