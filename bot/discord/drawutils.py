@@ -2,7 +2,7 @@ from io import BytesIO
 import os
 from typing import List
 from models.models import Card
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw, ImageOps, ImageSequence
 from cardmaker import CardConstructor
 
 
@@ -24,6 +24,32 @@ class DrawUtils:
         output = CardConstructor(input_data)
         output_card = output.generateCard()
         return (BytesIO(output_card))
+    
+    @staticmethod 
+    def summon(card: Card):
+        im = Image.open(os.path.dirname(__file__) + f"/../assets/summon.gif")
+        frames = [frame.copy() for frame in ImageSequence.Iterator(im)]
+        for idx, frame in enumerate(frames):
+            if idx > len(frames) - 4:
+                card_size = (250, 270)
+                pos = (60,-15)
+                card_image = DrawUtils.card_to_image(card)
+                card_image = card_image.resize(card_size)
+
+                width, height = card_image.size
+                m = -0.5
+                xshift = abs(m) * width
+                new_width = width + int(round(xshift))
+                card_image = card_image.transform((new_width, height), Image.AFFINE,
+                        (1, m, -xshift if m > 0 else 0, 0, 1, 0), Image.BICUBIC)
+                
+                card_image = card_image.rotate(15, expand=1)
+
+                frame.paste(card_image, pos, card_image)
+                
+        buffered = BytesIO()
+        frames[0].save(buffered, format="GIF", save_all=True, append_images=frames[1:])
+        return BytesIO(buffered.getvalue())
 
     @staticmethod
     def card_to_image(card: Card):

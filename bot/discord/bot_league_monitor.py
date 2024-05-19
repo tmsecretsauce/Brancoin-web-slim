@@ -11,6 +11,7 @@ import discord.ext
 import discord.ext.commands
 import sqlalchemy
 
+from discord.commands.viewcard import ViewCard
 from discord.commands.viewpackcards import ViewPackCards
 from discord.commands.viewpacks import ViewPacks
 from discord.commands.openpack import OpenPack
@@ -46,7 +47,7 @@ import traceback
 
 @inject
 class DiscordMonitorClient(commands.Bot):
-    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote(), ViewVotes(), Beg(), ViewShop(), Buy(), Inventory(), SelectCard(), AdminAddImage(), AdminAddCard(), OpenPack(), ViewPacks(), ViewPackCards()]
+    commands = [Discover(), Coin(), Gift(), Spin(), Coins(), ViewMatches(), ViewJackpot(), AdminAddLeague(), AdminAddBroadcast(), AddVote(), ViewVotes(), Beg(), ViewShop(), Buy(), Inventory(), SelectCard(), AdminAddImage(), AdminAddCard(), OpenPack(), ViewPacks(), ViewPackCards(), ViewCard()]
     @inject
     def __init__(self, intents, dbservice: DbService = Provide[DbContainer.service], league_service: LeagueService = Provide[LeagueContainer.service]):
         super().__init__(intents=intents, command_prefix="b ")
@@ -147,7 +148,7 @@ class DiscordMonitorClient(commands.Bot):
                 session.add(vote)
         if we_win:
             for match_player in match.match_players:
-                match_player.league_user.discord_user.brancoins += 25
+                match_player.league_user.discord_user.brancoins += 50
                 session.add(match_player)
 
     async def output_votes_results(self, match_id: str, results):
@@ -173,7 +174,7 @@ class DiscordMonitorClient(commands.Bot):
                 if we_win:    
                     for match_player in match.match_players:
                         guy = await self.fetch_user(match_player.league_user.discord_user.user_id)
-                        output += f"{guy.display_name} made 25 for winning ! :tada: \n"
+                        output += f"{guy.display_name} made 50 for winning ! :tada: \n"
                 await self.broadcast_all_str(session, output)
         except Exception as e: 
             print(e)
