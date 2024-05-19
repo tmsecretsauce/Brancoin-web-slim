@@ -137,9 +137,9 @@ class DiscordMonitorClient(commands.Bot):
                     print("match is not closed")
 
     def process_votes(self, session, match: Match, results):
+        we_win = results['extra_data']['our_team_won']
         for vote in match.votes:
             if vote.type_of_vote == VoteType.WIN.value or vote.type_of_vote == VoteType.LOSE.value:
-                we_win = results['extra_data']['our_team_won']
                 if vote.type_of_vote == VoteType.WIN.value and we_win:
                     vote.voter.brancoins += vote.brancoins * 2
                 elif vote.type_of_vote == VoteType.LOSE.value and we_win == False:
