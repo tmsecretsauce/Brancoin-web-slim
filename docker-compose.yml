@@ -2,15 +2,14 @@ version: "3.8"
 services:
 
   db:
-    image: postgres
+    image: mariadb
     environment:
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_USER=dev
-      - POSTGRES_DB=brancoin
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=dev
+      - MYSQL_DATABASE=bagana
     ports:
-      - 8082:5432
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - 3306:3306
 
   adminer:
     image: adminer
@@ -20,22 +19,19 @@ services:
 
   bot:
     build: ./bot/
-    env_file:
-      - ./env.txt
+    restart: always
     environment:
       - POSTGRES_HOST=db
       - POSTGRES_PASSWORD=password
-      - POSTGRES_USER=dev
-      - POSTGRES_DB=brancoin
-      - IS_DEBUG=true
+      - POSTGRES_USER=root
+      - POSTGRES_DB=bagana
+      - DB_TYPE=mariadb+mariadbconnector
       - WEB_PORT=8081
     ports:
       - 8081:8081
     depends_on:
       - db
-    # volumes:
-    #   - ./bot/:/usr/src/app
+    volumes:
+      - ./bot/:/usr/src/app
     
-volumes:
-  pgdata:
      

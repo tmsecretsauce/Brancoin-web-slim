@@ -8,6 +8,8 @@ from models.dbcontainer import DbContainer, DbService
 from dependency_injector.wiring import Provide, inject
 from envvars import Env
 from bottle import route, run, template, post, get, response
+from discord.drawutils import DrawUtils
+import math
 from cardmaker import CardConstructor
 
 @post('/image')
@@ -24,33 +26,44 @@ def upload_image(dbservice: DbService = Provide[DbContainer.service]):
 
     return "done"
 
-@get('/preview')
+@get('/card')
 @inject
-def get_image(dbservice: DbService = Provide[DbContainer.service]):
+def get_card(dbservice: DbService = Provide[DbContainer.service]):
     id = request.query['id']
 
     with dbservice.Session() as session:
         card = session.query(Card).filter(Card.id == id).first()
-        print(card.description)
-        input_data = {
-            "card": card.card_style,
-            "Title": card.title,
-            "attribute": card.attribute,
-            "Level": int(card.level),
-            "Type": card.type,
-            "Descripton": str(card.description).replace('\\n','\n'),
-            "Atk": card.atk,
-            "Def": card.defe
-            }
-        input_data["image_card"] = PIL.Image.open(BytesIO(card.image.bin))
-        output = CardConstructor(input_data)
         response.set_header('Content-type', 'image/png')
-        output_card = output.generateCard()
-        return BytesIO(output_card)
+        return DrawUtils.card_to_byte_image(card)
 
     return "done"
 
+@get('/summon')
+@inject
+def get_summon(dbservice: DbService = Provide[DbContainer.service]):
+    id = request.query['id']
 
+    with dbservice.Session() as session:
+        card = session.query(Card).filter(Card.id == id).first()
+        response.set_header('Content-type', 'image/gif')
+        return DrawUtils.summon(card)
+
+    return "done"
+
+@get('/cards')
+@inject
+def get_cards(dbservice: DbService = Provide[DbContainer.service]):
+    ids: List[str] = request.query['ids'].split(',')
+    with dbservice.Session() as session:
+        cards = session.query(Card).filter(Card.id.in_(ids)).all()
+        response.set_header('Content-type', 'image/png')
+        grid = (math.ceil(math.sqrt(len(cards))), math.ceil(math.sqrt(len(cards))))
+        inv_img =  DrawUtils.draw_inv_card_spread(cards, (1600,1200), grid, True)
+        buffered = BytesIO()
+        inv_img.save(buffered, format="PNG")
+        return BytesIO(buffered.getvalue())
+
+    return "done"
 
 def start():
 
