@@ -42,7 +42,7 @@ def upgrade() -> None:
     sa.Column('attribute', sa.String(length=32), nullable=False),
     sa.Column('level', sa.String(length=32), nullable=False),
     sa.Column('type', sa.String(length=32), nullable=False),
-    sa.Column('description', sa.String(length=32), nullable=False),
+    sa.Column('description', sa.String(length=255), nullable=False),
     sa.Column('atk', sa.String(length=32), nullable=False),
     sa.Column('defe', sa.String(length=32), nullable=False),
     sa.Column('cost', sa.Integer(), nullable=False),

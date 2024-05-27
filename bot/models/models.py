@@ -27,7 +27,7 @@ class Card(Base):
     attribute: Mapped[str] = mapped_column(String(32))
     level: Mapped[str] = mapped_column(String(32))
     type: Mapped[str] = mapped_column(String(32))
-    description: Mapped[str] = mapped_column(String(32))
+    description: Mapped[str] = mapped_column(String(255))
     atk: Mapped[str] = mapped_column(String(32))
     defe: Mapped[str] = mapped_column(String(32))
     cost: Mapped[int] 
