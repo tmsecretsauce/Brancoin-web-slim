@@ -4,10 +4,9 @@ from typing import List
 from models.models import Card
 from PIL import Image, ImageDraw, ImageOps, ImageSequence
 from cardmaker import CardConstructor
-
+import requests
 
 class DrawUtils:
-
     @staticmethod
     def card_to_byte_image(card: Card):
         input_data = {
@@ -19,11 +18,12 @@ class DrawUtils:
             "Descripton": str(card.description).replace('\\n','\n'),
             "Atk": card.atk,
             "Def": card.defe
-            }
-        input_data["image_card"] = Image.open(BytesIO(card.image.bin))
+        }
+        image_response = requests.get(card.image.discord_url)
+        input_data["image_card"] = Image.open(BytesIO(image_response.content))
         output = CardConstructor(input_data)
         output_card = output.generateCard()
-        return (BytesIO(output_card))
+        return BytesIO(output_card)
     
     @staticmethod 
     def summon(card: Card):
@@ -75,7 +75,6 @@ class DrawUtils:
                 bot_right_x = top_left_x + rect_size[0]
                 bot_right_y = top_left_y + rect_size[1]
                 pos = (top_left_x, top_left_y, bot_right_x, bot_right_y)
-                # draw.rectangle(pos, fill ="#ffff33", outline ="red")  
                 if card_idx < len(cards) or draw_blanks:
                     image_card = DrawUtils.card_to_image(cards[card_idx]) if card_idx < len(cards) else DrawUtils.card_to_image(cards[0])
                     image_bg = Image.new('RGBA', (image_card.size[0] + 20, image_card.size[1] + 20), (203, 189, 147))

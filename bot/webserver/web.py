@@ -1,30 +1,25 @@
-import base64
-from io import BytesIO
-import PIL
-from bottle import Bottle, route, request 
-from models.models import Card
-import models
+from bottle import Bottle, route, request, response, post, get
+from models.models import Card, Image
 from models.dbcontainer import DbContainer, DbService
 from dependency_injector.wiring import Provide, inject
 from envvars import Env
-from bottle import route, run, template, post, get, response
 from discord.drawutils import DrawUtils
 import math
-from cardmaker import CardConstructor
+from io import BytesIO
 
 @post('/image')
 @inject
-def upload_image(dbservice: DbService = Provide[DbContainer.service]):
-    image = models.Image()
-    print(request.files.get("image"))
-    image.bin = request.files.get("image").file.read()
-    image.label = request.forms.get("label")
+def add_image(dbservice: DbService = Provide[DbContainer.service]):
+    label = request.query.get('label')
+    discord_url = request.query.get('discord_url')
+
+    image = Image(label=label, discord_url=discord_url)
 
     with dbservice.Session() as session:
         session.add(image)
         session.commit()
 
-    return "done"
+    return "Image reference added successfully"
 
 @get('/card')
 @inject
@@ -33,10 +28,12 @@ def get_card(dbservice: DbService = Provide[DbContainer.service]):
 
     with dbservice.Session() as session:
         card = session.query(Card).filter(Card.id == id).first()
-        response.set_header('Content-type', 'image/png')
-        return DrawUtils.card_to_byte_image(card)
-
-    return "done"
+        if card:
+            response.set_header('Content-type', 'image/png')
+            return DrawUtils.card_to_byte_image(card)
+        else:
+            response.status = 404
+            return "Card not found"
 
 @get('/summon')
 @inject
@@ -45,27 +42,29 @@ def get_summon(dbservice: DbService = Provide[DbContainer.service]):
 
     with dbservice.Session() as session:
         card = session.query(Card).filter(Card.id == id).first()
-        response.set_header('Content-type', 'image/gif')
-        return DrawUtils.summon(card)
-
-    return "done"
+        if card:
+            response.set_header('Content-type', 'image/gif')
+            return DrawUtils.summon(card)
+        else:
+            response.status = 404
+            return "Card not found"
 
 @get('/cards')
 @inject
 def get_cards(dbservice: DbService = Provide[DbContainer.service]):
-    ids: List[str] = request.query['ids'].split(',')
+    ids = request.query['ids'].split(',')
     with dbservice.Session() as session:
         cards = session.query(Card).filter(Card.id.in_(ids)).all()
-        response.set_header('Content-type', 'image/png')
-        grid = (math.ceil(math.sqrt(len(cards))), math.ceil(math.sqrt(len(cards))))
-        inv_img =  DrawUtils.draw_inv_card_spread(cards, (1600,1200), grid, True)
-        buffered = BytesIO()
-        inv_img.save(buffered, format="PNG")
-        return BytesIO(buffered.getvalue())
-
-    return "done"
+        if cards:
+            response.set_header('Content-type', 'image/png')
+            grid = (math.ceil(math.sqrt(len(cards))), math.ceil(math.sqrt(len(cards))))
+            inv_img = DrawUtils.draw_inv_card_spread(cards, (1600,1200), grid, True)
+            buffered = BytesIO()
+            inv_img.save(buffered, format="PNG")
+            return BytesIO(buffered.getvalue())
+        else:
+            response.status = 404
+            return "No cards found"
 
 def start():
-
-
     run(host='0.0.0.0', port=Env.web_port)
